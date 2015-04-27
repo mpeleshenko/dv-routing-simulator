@@ -4,7 +4,7 @@
 # 10/19/14
 # Author: Nicholas Bevacqua (nbevacqu) & Neal Trischitta (ntrischi) & Michael Peleshenko (mpeleshe)
 #
-# I pledge my honor that I have abided by the Stevens Honor System.
+# I pledge my honor that I have abided by the Stevens Honor System.$
 #
 # Assignment  - Makefile
 
@@ -33,6 +33,6 @@ clean:
 	$(RM) $(SRCDIR)/*.core
 
 fclean: clean
-	$(RM) $(BINDIR)/$(NAME)
+	$(RM) $(BINDIR)$/$(NAME)
 
 re: fclean all
