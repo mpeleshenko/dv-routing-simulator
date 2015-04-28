@@ -1,15 +1,25 @@
 #include <stdio.h>
+#include <string.h>
+
+#define INFINITY 999
+#define NODE_ID 3
 
 extern struct rtpkt {
   int sourceid;       /* id of sending router sending this pkt */
   int destid;         /* id of router to which pkt being sent 
                          (must be an immediate neighbor) */
   int mincost[4];    /* min cost to node 0 ... 3 */
-  };
+} rtpkt;
 
+/* External declarations */
 extern int TRACE;
 extern int YES;
 extern int NO;
+extern void tolayer2();
+
+/* Internal declarations */
+const int defaultcosts3[4] = { INFINITY, INFINITY, INFINITY, INFINITY };
+const int connectcosts3[4] = { 7, INFINITY, 2, 0 };
 
 struct distance_table 
 {
@@ -20,6 +30,28 @@ struct distance_table
 
 void rtinit3() 
 {
+  /* Initialize all costs to infinity */
+  for (int x = 0; x < 4; ++x)
+  {
+    memcpy(&dt3.costs[x], &defaultcosts3, sizeof(defaultcosts3));
+  }
+
+  /* Initialize link costs from node to neighbors */
+  memcpy(&dt3.costs[NODE_ID], &connectcosts3, sizeof(connectcosts3));
+
+  /* Update neighbor nodes with initial distance vector */
+  struct rtpkt updatepkt;
+
+  for (int y = 0; y < 4; ++y)
+  {
+    if (y != NODE_ID && connectcosts3[y] != INFINITY)
+    {
+      updatepkt.sourceid = NODE_ID;
+      updatepkt.destid = y;
+      memcpy(&updatepkt.mincost, &dt3.costs[NODE_ID], sizeof(updatepkt.mincost));
+      tolayer2(updatepkt);
+    }
+  }
 }
 
 
@@ -31,7 +63,7 @@ void rtupdate3(rcvdpkt)
 }
 
 
-printdt3(dtptr)
+void printdt3(dtptr)
   struct distance_table *dtptr;
   
 {

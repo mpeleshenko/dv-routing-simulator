@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define LINKCHANGES 1 
 /* ******************************************************************
@@ -23,7 +24,25 @@ int TRACE = 1;             /* for my debugging */
 int YES = 1;
 int NO = 0;
 
-creatertpkt( initrtpkt, srcid, destid, mincosts)
+/* External declarations */
+void rtinit0();
+void rtinit1();
+void rtinit2();
+void rtinit3();
+
+void rtupdate0();
+void rtupdate1();
+void rtupdate2();
+void rtupdate3();
+
+void linkhandler0();
+void linkhandler1();
+
+/* Internal declarations */
+void init();
+void insertevent();
+
+void creatertpkt( initrtpkt, srcid, destid, mincosts)
 struct rtpkt *initrtpkt;
 int srcid;
 int destid;
@@ -70,7 +89,7 @@ struct event *evlist = NULL;   /* the event list */
 float clocktime = 0.000;
 
 
-main()
+int main()
 {
    struct event *eventptr;
    
@@ -131,7 +150,7 @@ terminate:
 
 
 
-init()                         /* initialize the simulator */
+void init()                         /* initialize the simulator */
 {
   int i;
   float sum, avg;
@@ -150,7 +169,7 @@ init()                         /* initialize the simulator */
     printf("It is likely that random number generation on your machine\n" ); 
     printf("is different from what this emulator expects.  Please take\n");
     printf("a look at the routine jimsrand() in the emulator code. Sorry. \n");
-    exit();
+    exit(0);
     }
 
    clocktime=0.0;                /* initialize time to 0.0 */
@@ -194,7 +213,7 @@ float jimsrand()
 /*****************************************************/
  
 
-insertevent(p)
+void insertevent(p)
    struct event *p;
 {
    struct event *q,*qold;
@@ -232,7 +251,7 @@ insertevent(p)
          }
 }
 
-printevlist()
+void printevlist()
 {
   struct event *q;
   printf("--------------\nEvent List Follows:\n");
@@ -244,7 +263,7 @@ printevlist()
 
 
 /************************** TOLAYER2 ***************/
-tolayer2(packet)
+void tolayer2(packet)
   struct rtpkt packet;
   
 {

@@ -1,12 +1,12 @@
 # CS-521-A
 # Professor Rahman
 #
-# 10/19/14
+# 4/30/15
 # Author: Nicholas Bevacqua (nbevacqu) & Neal Trischitta (ntrischi) & Michael Peleshenko (mpeleshe)
 #
-# I pledge my honor that I have abided by the Stevens Honor System.$
+# I pledge my honor that I have abided by the Stevens Honor System.
 #
-# Assignment  - Makefile
+# Distance Vector Routing Simulator - Makefile
 
 NAME := prog3
 SRCDIR := src
@@ -15,7 +15,7 @@ OBJDIR := obj
 OBJ := $(addprefix $(OBJDIR)/,$(notdir $(SRC:.c=.o)))
 BINDIR := bin
 CC := gcc
-CFLAGS += 
+CFLAGS += -Wall -pedantic-errors -std=c11
 
 RM := rm -f
 
@@ -33,6 +33,6 @@ clean:
 	$(RM) $(SRCDIR)/*.core
 
 fclean: clean
-	$(RM) $(BINDIR)$/$(NAME)
+	$(RM) $(BINDIR)/$(NAME)
 
 re: fclean all
