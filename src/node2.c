@@ -15,6 +15,7 @@ extern struct rtpkt {
 extern int TRACE;
 extern int YES;
 extern int NO;
+extern float clocktime;
 extern void tolayer2();
 
 /* Internal declarations */
@@ -30,6 +31,8 @@ struct distance_table
 
 void rtinit2() 
 {
+  printf("rtinit2 called at time %f\n", clocktime);
+
   /* Initialize all costs to infinity */
   for (int x = 0; x < 4; ++x)
   {
