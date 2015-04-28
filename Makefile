@@ -15,12 +15,12 @@ OBJDIR := obj
 OBJ := $(addprefix $(OBJDIR)/,$(notdir $(SRC:.c=.o)))
 BINDIR := bin
 CC := gcc
-CFLAGS += -Wall -pedantic-errors
+CFLAGS += 
 
 RM := rm -f
 
 all: $(OBJ)
-	$(CC) -o $@ $(BINDIR)/$(NAME)
+	$(CC) -o $(BINDIR)/$(NAME) $(OBJ)
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
