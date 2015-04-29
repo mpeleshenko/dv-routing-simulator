@@ -4,7 +4,7 @@
 #define INFINITY 999
 #define NODE_ID 2
 
-
+#define MIN(a, b) ((a < b)? a : b)
 
 extern struct rtpkt {
   int sourceid;       /* id of sending router sending this pkt */
@@ -37,14 +37,17 @@ void rtinit2()
 {
   printf("rtinit2 called at time %f\n", clocktime);
 
-  /* Initialize all costs to infinity */
-  for (int x = 0; x < 4; ++x)
-  {
-    memcpy(&dt2.costs[x], &defaultcosts2, sizeof(defaultcosts2));
+  for(int i = 0; i < 4; i++) {
+    for(int j = 0; j < 4; j++) {
+      dt2.costs[i][j] = INFINITY;
+    }
   }
 
-  /* Initialize link costs from node to neighbors */
-  memcpy(&dt2.costs[NODE_ID], &connectcosts2, sizeof(connectcosts2));
+  // set initial costs
+  for(int i = 0; i < 4; i++) {
+    dt2.costs[i][NODE_ID] = connectcosts2[i];
+    dt2.costs[i][i] = connectcosts2[i];
+  }
 
   /* Update neighbor nodes with initial distance vector */
   struct rtpkt updatepkt;
@@ -55,12 +58,15 @@ void rtinit2()
     {
       updatepkt.sourceid = NODE_ID;
       updatepkt.destid = y;
-      memcpy(&updatepkt.mincost, &dt2.costs[NODE_ID], sizeof(updatepkt.mincost));
+      for(int i = 0; i < 4; i++) {
+        updatepkt.mincost[i] = dt2.costs[i][NODE_ID];
+      }
       printf("calling tolayer2 in rtinit2 with NODE_ID=%d, packet source id = %d and packet dest id = %d\n", NODE_ID, updatepkt.sourceid, updatepkt.destid=y);
       tolayer2(updatepkt);
     }
   }
 }
+
 
 
 void rtupdate2(rcvdpkt)
@@ -78,48 +84,50 @@ void rtupdate2(rcvdpkt)
         return;
     }
 
+    // how much does it cost to reach i from our current value compared to going through node sid
     for(int i = 0; i < 4; i++) {
-        selfCostTable->costs[sid][i] = rcvdpkt->mincost[i];
+        /*
+        if(i == sid) {
+            printf("no need to compute distance from %d to %d via %d\n", self, i, sid);
+            continue;
+        } else {
+            printf("calculating distance from %d to %d via %d\n", self, i, sid);
+        }
+        */
+        // selfCostTable[n1][n2] means cost to reach n1 via n2
+        int costFromSidToI = rcvdpkt->mincost[i];
+        int costFromSelfToSid = selfCostTable->costs[sid][self];
+        int currentCostFromSelfToI = selfCostTable->costs[i][self];
+        int costFromSelfToIViaSid = MIN(costFromSelfToSid+costFromSidToI, INFINITY);
+        printf("incoming packet says cost from %d to %d is %d\n", sid, i, costFromSidToI);
+        printf("we already know that the cost from %d to %d is %d\n", self, sid, costFromSelfToSid);
+        printf("the current cost from %d to %d is %d\n", self, i, currentCostFromSelfToI);
+        printf("given new information, we know that the cost from %d to %d via %d is now %d\n", self, i, sid, costFromSelfToIViaSid);
+        selfCostTable->costs[i][sid] = costFromSelfToIViaSid;
+        if(costFromSelfToIViaSid < currentCostFromSelfToI) {
+
+            selfCostTable->costs[i][self] = costFromSelfToIViaSid;
+            printf("shorter distance found: distance from %d to %d is now %d by going through %d\n", self, i, costFromSelfToIViaSid, sid);
+
+
+            for(int i = 0; i < 4; i++) {
+                if(connectCosts[i] != INFINITY && i != self) {
+                    struct rtpkt packet;
+                    packet.sourceid = self;
+                    packet.destid = i;
+                    for(int j = 0; j < 4; j++) {
+                        packet.mincost[j] = selfCostTable->costs[j][self];
+                    }
+                    tolayer2(packet);
+                }
+            }
+
+
+        }
     }
 
-    // for all i and j, check if we can reach i faster by going through j
-    int somethingChanged = 0;
-    for(int i = 0; i < 4; i++)
-    {
-        for(int j = 0; j < 4; j++) {
-            if(i == self || j == self) {
-                continue;
-            }
-            // can already reach node i in shorter time that node j
-            int distance = selfCostTable->costs[self][j]+selfCostTable->costs[j][i];
-            int currentCost = selfCostTable->costs[self][i];
-            
-            if(distance < currentCost) {
-                printf("detected change: node %d now knows it can reach %d with distance %d\n", self, i, distance);
-                selfCostTable->costs[self][i] = distance;
-                somethingChanged = 1;
-            }
-        }
-    }
-    if(somethingChanged > 0) {
-        for(int i = 0; i < 4; i++) {
-            // skip sending it to yourself or nodes not directly connected
-            if(i == self || connectCosts[i] == INFINITY) {
-                continue;
-            }
-            struct rtpkt packet;
-            packet.sourceid = self;
-            packet.destid = i;
-            for(int j = 0; j < 4; j++) {
-                packet.mincost[j] = selfCostTable->costs[self][j];
-            }
-            printf("rtupdate2: distance change discovered for %d: sending packet from %d to %d\n", self, self, i);
-            tolayer2(packet);
-        }
-    } else {
-        printf("rtupdate2: nothing changed in distance tables\n");
-    }
     printdt2(selfCostTable);
+
 }
 
 
