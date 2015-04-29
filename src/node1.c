@@ -95,6 +95,7 @@ void rtupdate1(rcvdpkt)
             int currentCost = selfCostTable->costs[self][i];
             
             if(distance < currentCost) {
+                printf("detected change: node %d now knows it can reach %d with distance %d\n", self, i, distance);
                 selfCostTable->costs[self][i] = distance;
                 somethingChanged = 1;
             }

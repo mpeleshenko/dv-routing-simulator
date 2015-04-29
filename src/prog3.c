@@ -302,6 +302,7 @@ void tolayer2(packet)
    }
  if (connectcosts[packet.sourceid][packet.destid] == 999)  {
    printf("WARNING: source and destination not connected, ignoring packet!\n");
+   printf("source id was %d and dest id was %d\n", packet.sourceid, packet.destid);
    return;
    }
 
