@@ -287,14 +287,17 @@ void tolayer2(packet)
  /* be nice: check if source and destination id's are reasonable */
  if (packet.sourceid<0 || packet.sourceid >3) {
    printf("WARNING: illegal source id in your packet, ignoring packet!\n");
+   printf("source id was %d and dest id was %d\n", packet.sourceid, packet.destid);
    return;
    }
  if (packet.destid<0 || packet.destid >3) {
    printf("WARNING: illegal dest id in your packet, ignoring packet!\n");
+   printf("source id was %d and dest id was %d\n", packet.sourceid, packet.destid);
    return;
    }
  if (packet.sourceid == packet.destid)  {
    printf("WARNING: source and destination id's the same, ignoring packet!\n");
+   printf("source id was %d and dest id was %d\n", packet.sourceid, packet.destid);
    return;
    }
  if (connectcosts[packet.sourceid][packet.destid] == 999)  {
