@@ -35,51 +35,59 @@ void printdt1(struct distance_table *);
 
 void rtinit1() 
 {
-  printf("rtinit1 called at time %f\n", clocktime);
+    printf("[t=%f] [rtinit1] CALL - called\n", clocktime);
 
-  for(int i = 0; i < 4; i++) {
-    for(int j = 0; j < 4; j++) {
-      dt1.costs[i][j] = INFINITY;
+    int self = NODE_ID;
+    struct distance_table *selfCostTable = &dt1;
+    const int* connectCosts = &connectcosts1[0];
+
+    /* Set initial costs to INFNINTY */
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            selfCostTable->costs[i][j] = INFINITY;
+        }
     }
-  }
 
-  // set initial costs
-  for(int i = 0; i < 4; i++) {
-    dt1.costs[i][NODE_ID] = connectcosts1[i];
-    dt1.costs[i][i] = connectcosts1[i];
-  }
+    /* Set initial costs for self to neighbors */
+    for(int i = 0; i < 4; i++) {
+        selfCostTable->costs[i][self] = connectCosts[i];
+        selfCostTable->costs[i][i] = connectCosts[i];
+    }
 
-  /* Update neighbor nodes with initial distance vector */
-  struct rtpkt updatepkt;
+    /* Update neighbor nodes with initial distance vector */
+    struct rtpkt updatepkt;
 
-  for (int y = 0; y < 4; ++y)
-  {
-    if (y != NODE_ID && connectcosts1[y] != INFINITY)
+    for (int y = 0; y < 4; ++y)
     {
-      updatepkt.sourceid = NODE_ID;
-      updatepkt.destid = y;
-      for(int i = 0; i < 4; i++) {
-        updatepkt.mincost[i] = dt1.costs[i][NODE_ID];
-      }
-      printf("calling tolayer2 in rtinit1 with NODE_ID=%d, packet source id = %d and packet dest id = %d\n", NODE_ID, updatepkt.sourceid, updatepkt.destid=y);
-      tolayer2(updatepkt);
+        if (y != self && connectCosts[y] != INFINITY)
+        {
+            updatepkt.sourceid = self;
+            updatepkt.destid = y;
+            for(int i = 0; i < 4; i++) {
+                updatepkt.mincost[i] = selfCostTable->costs[i][self];
+            }
+            printf("[t=%f] [rtinit1] SENDMSG - tolayer2 called in rtinit1 with NODE_ID=%d, packet source id = %d and packet dest id = %d\n", clocktime, self, updatepkt.sourceid, updatepkt.destid=y);
+            tolayer2(updatepkt);
+        }
     }
-  }
 }
 
 
 
-void rtupdate1(rcvdpkt)
-  struct rtpkt *rcvdpkt;
-  
+void rtupdate1(struct rtpkt *rcvdpkt)
 {
-    printf("rtupdate1\n");
-    int self = 1;
+    printf("[t=%f] [rtupdate1] CALL - called with packet from %d\n", clocktime, rcvdpkt->sourceid);
+
+    int self = NODE_ID;
+    short dv_changed = 0;
     struct distance_table *selfCostTable = &dt1;
     const int* connectCosts = &connectcosts1[0];
 
+    /* Source and destination from received packet */
     int sid = rcvdpkt->sourceid;
     int did = rcvdpkt->destid;
+
+    /* Check if destid is self */
     if(did != self) {
         return;
     }
@@ -96,38 +104,47 @@ void rtupdate1(rcvdpkt)
         */
         // selfCostTable[n1][n2] means cost to reach n1 via n2
         int costFromSidToI = rcvdpkt->mincost[i];
-        int costFromSelfToSid = selfCostTable->costs[sid][self];
         int currentCostFromSelfToI = selfCostTable->costs[i][self];
+        int costFromSelfToSid = selfCostTable->costs[sid][self];
         int costFromSelfToIViaSid = MIN(costFromSelfToSid+costFromSidToI, INFINITY);
-        printf("incoming packet says cost from %d to %d is %d\n", sid, i, costFromSidToI);
-        printf("we already know that the cost from %d to %d is %d\n", self, sid, costFromSelfToSid);
-        printf("the current cost from %d to %d is %d\n", self, i, currentCostFromSelfToI);
-        printf("given new information, we know that the cost from %d to %d via %d is now %d\n", self, i, sid, costFromSelfToIViaSid);
+
+        printf("[t=%f] [rtupdate1] DEBUG - current known cost from %d to %d is %d\n", clocktime, self, sid, costFromSelfToSid);
+        printf("[t=%f] [rtupdate1] DEBUG - current known cost from %d to %d is %d\n", clocktime, self, i, currentCostFromSelfToI);
+        printf("[t=%f] [rtupdate1] DEBUG - the cost from %d to %d via %d is now %d\n", clocktime, self, i, sid, costFromSelfToIViaSid);
+
+        /* Update selfCostTable with the cost to I via Sid */
         selfCostTable->costs[i][sid] = costFromSelfToIViaSid;
+
+        /* Update own DV if new calculated cost is lower than current */
         if(costFromSelfToIViaSid < currentCostFromSelfToI) {
 
             selfCostTable->costs[i][self] = costFromSelfToIViaSid;
-            printf("shorter distance found: distance from %d to %d is now %d by going through %d\n", self, i, costFromSelfToIViaSid, sid);
+            dv_changed = 1;
+            printf("[t=%f] [rtupdate1] DVCHANGED - distance from %d to %d is now %d by going through %d\n", clocktime, self, i, costFromSelfToIViaSid, sid);
 
-
-            for(int i = 0; i < 4; i++) {
-                if(connectCosts[i] != INFINITY && i != self) {
+            /* Update neighbors */
+            for (int i = 0; i < 4; i++) {
+                if (connectCosts[i] != INFINITY && i != self) {
                     struct rtpkt packet;
                     packet.sourceid = self;
                     packet.destid = i;
-                    for(int j = 0; j < 4; j++) {
+                    for (int j = 0; j < 4; j++) {
                         packet.mincost[j] = selfCostTable->costs[j][self];
                     }
+                    printf("[t=%f] [rtupdate1] SENDMSG - tolayer2 called in rtupdate1 with NODE_ID=%d, packet source id = %d and packet dest id = %d\n", clocktime, NODE_ID, packet.sourceid, packet.destid);
                     tolayer2(packet);
                 }
             }
-
-
         }
     }
 
-    printdt1(selfCostTable);
+    /* Log if DV did not change */
+    if (dv_changed == 0)
+    {
+        printf("[t=%f] [rtupdate1] DVNOTCHANGED - no shorter paths found\n", clocktime);
+    }
 
+    printdt1(selfCostTable);
 }
 
 
