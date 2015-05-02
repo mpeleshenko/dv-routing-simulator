@@ -1,3 +1,16 @@
+/*
+ * CS-521-A
+ * Professor Rahman
+ *
+ * 4/30/15
+ * Author: Nicholas Bevacqua (nbevacqu) & Neal Trischitta (ntrischi) & Michael Peleshenko (mpeleshe)
+ *
+ * I pledge my honor that I have abided by the Stevens Honor System.
+ *
+ * Distance Vector Routing Simulator
+ */
+
+
 #include <stdio.h>
 #include <string.h>
 
@@ -41,7 +54,7 @@ void rtinit0()
     struct distance_table *selfCostTable = &dt0;
     const int* connectCosts = &connectcosts0[0];
 
-    /* Set initial costs to INFNINTY */
+    /* Set initial costs to INFINITY */
     for(int i = 0; i < 4; i++) {
         for(int j = 0; j < 4; j++) {
             selfCostTable->costs[i][j] = INFINITY;

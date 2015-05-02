@@ -6,7 +6,7 @@
 #
 # I pledge my honor that I have abided by the Stevens Honor System.
 #
-# Distance Vector Routing Simulator - Makefile
+# Distance Vector Routing Simulator
 
 NAME := prog3
 SRCDIR := src
