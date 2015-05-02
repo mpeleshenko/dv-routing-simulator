@@ -2,7 +2,7 @@
 # Professor Rahman
 #
 # 4/30/15
-# Author: Nicholas Bevacqua (nbevacqu) & Neal Trischitta (ntrischi) & Michael Peleshenko (mpeleshe)
+# Authors: Nicholas Bevacqua (nbevacqu) & Neal Trischitta (ntrischi) & Michael Peleshenko (mpeleshe)
 #
 # I pledge my honor that I have abided by the Stevens Honor System.
 #
